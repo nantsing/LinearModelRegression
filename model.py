@@ -3,7 +3,7 @@
 import numpy as np
 from dataset import get_data
 from data_preprocess import DataSet
-import matplotlib as pyplot
+from matplotlib import pyplot as plt
 
 # y_i = beta.T @ X_i
 class LinearRegression:
@@ -158,8 +158,13 @@ def sse_loss(Y_predict, Y_test):
         sum += (i - j)**2
     return sum
 
-def polt_beta(beta):
-    
+def polt_beta(beta, name):
+    x = beta.copy()
+    x = abs(np.sort(-x))
+    plt.bar(range(13), x)
+    plt.grid(True,linestyle=':',color='r',alpha=0.6)
+    plt.title('Lasso Beta')
+    plt.savefig(f'fig/{name}.png')
 
 if __name__ == "__main__":
     epochs = 1000000
@@ -197,3 +202,5 @@ if __name__ == "__main__":
     # print(f'RBFKerner: {sse_loss(Kernel.predict(X_test), Y_test)}')
 
     print(f'Lasso: {sse_loss(Lasso.predict(X_test), Y_test)}')
+    print(Lasso.beta)
+    polt_beta(Lasso.beta, 'Lasso')
