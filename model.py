@@ -2,9 +2,12 @@
 #  Spline Regression and Lasso Regression.
 import numpy as np
 from dataset import get_data
-# y_i = beta^T * X_i
+from data_preprocess import DataSet
+
+# y_i = beta.T @ X_i
 class LinearRegression:
-    def __init__(self, X, Y) -> None:
+    def __init__(self, X, Y, seed = 42) -> None:
+        np.random.seed(42)
         self.X = np.array(X)
         self.Y = np.array(Y)
         self.num = len(Y)
@@ -32,8 +35,10 @@ class LinearRegression:
         return X @ self.beta
     
 
+#l(beta) = (Y - beta.T @ X).T @ (Y - beta.T @ X) + Lambda * beta.T @ beta
 class RidgeRegression:
-    def __init__(self, X, Y, Lambda = 0.01) -> None:
+    def __init__(self, X, Y, Lambda = 0.01, seed = 42) -> None:
+        np.random.seed(42)
         self.X = np.array(X)
         self.Y = np.array(Y)
         self.Lambda = Lambda
@@ -59,11 +64,46 @@ class RidgeRegression:
     def update(self, lr = 0.000002):
         self.beta = self.beta - lr * self.deri
     
-    def predict(self, X):
+    def predict(self, X): 
         return X @ self.beta
     
+#l(c) = (Y - Kc).T @ (Y - Kc) + Lambda * c.T @ K @ c
 class RBFKernelRegression:
-    pass
+    def __init__(self, X, Y, Lambda = 0.01, sigma = 0.1, seed = 42) -> None:
+        np.random.seed(42)
+        self.X = np.array(X)
+        self.Y = np.array(Y)
+        self.sigma = sigma
+        self.Lambda = Lambda
+        self.num = len(Y)
+        self.c = np.random.random(X.shape[0])
+        # tmp =  - 2 * self.X.T @ self.X + 
+        # self.K = np.exp()
+        self.K = np.random.random(X.shape[0], X.shape[0])
+        # It is not elegent
+        for i in range(X.shape[0]):
+            for j in range(X.shape[0]):
+                self.K[i,j] = np.exp(-(X[i] - X[j]).T @ (X[i] - X[j]) / (2 * self.sigma**2))
+    
+    def loss(self):
+        Y_predict = self.predict(self.X)
+        self.loss_ = ((self.Y - Y_predict).T @ (self.Y - Y_predict) + \
+            self.Lambda * self.c.T @ self.K @ self.c) / self.num
+        return self.loss_
+    
+    def derivative(self):
+        Y_predict = self.predict(self.X)
+        self.deri = (2 * self.X.T @ (Y_predict - self.Y) + 2 * self.Lambda * self.K @ self.c) / self.num
+        return self.deri
+        
+    def analysis_fit(self):
+        self.beta = np.linalg.inv(self.K  self.Lambda * np.eye(len(self.c))) @ Y
+    
+    def update(self, lr = 0.000002):
+        self.c = self.c - lr * self.deri
+    
+    def predict(self, X): 
+        return K @ self.c
 
 class LassRegression:
     pass
@@ -76,19 +116,21 @@ def sse_loss(Y_predict, Y_test):
     return sum
 
 if __name__ == "__main__":
-    epochs = 10000000
+    epochs = 1000000
     X_train, X_test, Y_train, Y_test = get_data("./dataset/forestfires.csv")
+    Data = DataSet(X_train, X_test, Y_train, Y_test)
+    Data.normalize() # Data normalization
+    X_train, Y_train = Data.train_set()
+    X_test, Y_test = Data.test_set()
     Linear = LinearRegression(X_train, Y_train)
-    Ridge = RidgeRegression(X_train, Y_train, 100000)
-    Linear.analysis_fit(X_train, Y_train)
+    Ridge = RidgeRegression(X_train, Y_train, 90)
     Ridge.analysis_fit(X_train, Y_train)
-    # for epoch in range(epochs):
-    #     loss = Linear.loss()
-    #     deri = Linear.derivative()
-    #     Linear.update()
-    #     if(epoch%5000 == 0):
-    #         print(f'Epoch {epoch}: loss = {loss}, derivative = {deri}')
+    for epoch in range(epochs):
+        loss = Linear.loss()
+        deri = Linear.derivative()
+        Linear.update()
+        if(epoch%5000 == 0):
+            print(f'Epoch {epoch}: loss = {loss}, derivative = {deri}')
             
-    # print(sse_loss(model.predict(X_test), Y_test))
     print(sse_loss(Linear.predict(X_test), Y_test))
     print(sse_loss(Ridge.predict(X_test), Y_test))
