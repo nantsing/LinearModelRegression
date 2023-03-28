@@ -77,13 +77,11 @@ class RBFKernelRegression:
         self.Lambda = Lambda
         self.num = len(Y)
         self.c = np.random.random(X.shape[0])
-        # tmp =  - 2 * self.X.T @ self.X + 
-        # self.K = np.exp()
-        self.K = np.random.random(X.shape[0], X.shape[0])
-        # It is not elegent
-        for i in range(X.shape[0]):
-            for j in range(X.shape[0]):
-                self.K[i,j] = np.exp(-(X[i] - X[j]).T @ (X[i] - X[j]) / (2 * self.sigma**2))
+        m, n = self.X.shape
+        X_2 = (np.sum(self.X**2, axis = 1) * np.ones((m, m)))
+        X_Y = self.X @ self.X.T
+        t = X_2 - 2 * X_Y + X_2.T
+        self.K = np.exp(-t / (2 * self.sigma**2))
     
     def loss(self):
         Y_predict = self.predict(self.X)
@@ -97,7 +95,7 @@ class RBFKernelRegression:
         return self.deri
         
     def analysis_fit(self):
-        self.beta = np.linalg.inv(self.K  self.Lambda * np.eye(len(self.c))) @ Y
+        self.beta = np.linalg.inv(self.K + self.Lambda * np.eye(len(self.c))) @ Y
     
     def update(self, lr = 0.000002):
         self.c = self.c - lr * self.deri
@@ -122,15 +120,16 @@ if __name__ == "__main__":
     Data.normalize() # Data normalization
     X_train, Y_train = Data.train_set()
     X_test, Y_test = Data.test_set()
-    Linear = LinearRegression(X_train, Y_train)
-    Ridge = RidgeRegression(X_train, Y_train, 90)
-    Ridge.analysis_fit(X_train, Y_train)
-    for epoch in range(epochs):
-        loss = Linear.loss()
-        deri = Linear.derivative()
-        Linear.update()
-        if(epoch%5000 == 0):
-            print(f'Epoch {epoch}: loss = {loss}, derivative = {deri}')
+    Kernel = RBFKernelRegression(X_train, Y_train)
+    # Linear = LinearRegression(X_train, Y_train)
+    # Ridge = RidgeRegression(X_train, Y_train, 90)
+    # Ridge.analysis_fit(X_train, Y_train)
+    # for epoch in range(epochs):
+    #     loss = Linear.loss()
+    #     deri = Linear.derivative()
+    #     Linear.update()
+    #     if(epoch%5000 == 0):
+    #         print(f'Epoch {epoch}: loss = {loss}, derivative = {deri}')
             
-    print(sse_loss(Linear.predict(X_test), Y_test))
-    print(sse_loss(Ridge.predict(X_test), Y_test))
+    # print(sse_loss(Linear.predict(X_test), Y_test))
+    # print(sse_loss(Ridge.predict(X_test), Y_test))
