@@ -2,7 +2,7 @@
 #  Spline Regression and Lasso Regression.
 import numpy as np
 from dataset import get_data
-from data_preprocess import DataSet
+# from data_preprocess import DataSet
 from matplotlib import pyplot as plt
 
 # y_i = beta.T @ X_i
@@ -29,7 +29,7 @@ class LinearRegression:
         Y = np.array(Y_train)
         self.beta = np.linalg.inv(X.T @ X) @ X.T @ Y
     
-    def update(self, lr = 0.000002):
+    def update(self, lr = 0.00002):
         self.beta = self.beta - lr * self.deri
     
     def predict(self, X):
@@ -132,7 +132,7 @@ class LassoRegression:
         self.deri = (self.X.T @ (Y_predict - self.Y) + self.Lambda * np.sign(self.beta)) / self.num
         return self.deri
     
-    def update(self, lr = 0.000002):
+    def update(self, lr = 0.001):
         self.beta = self.beta - lr * self.deri
     
     def predict(self, X): 
@@ -158,31 +158,41 @@ def sse_loss(Y_predict, Y_test):
         sum += (i - j)**2
     return sum
 
-def polt_beta(beta, name):
+def polt_beta(beta, name, is_removed_bias = 1):
     x = beta.copy()
-    x = abs(np.sort(-x))
-    plt.bar(range(13), x)
+    attri = np.array(['bias','X','Y','1th','day','FFMC','DMC','DC','ISI','temp','RH','wind','rain'])
+    if is_removed_bias:
+        attri = attri[1:]
+        x = x[1:]
+        
+    attri_idx = np.argsort(-x)
+    x = -np.sort(-x)
+    attri = attri[attri_idx]
+    
+    plt.figure()
+    plt.bar(attri, x)
     plt.grid(True,linestyle=':',color='r',alpha=0.6)
-    plt.title('Lasso Beta')
+    # plt.xlabel(attri)
+    plt.title(f'{name} Beta')
     plt.savefig(f'fig/{name}.png')
 
 if __name__ == "__main__":
-    epochs = 1000000
+    epochs = 1500000
     X_train, X_test, Y_train, Y_test = get_data("./dataset/forestfires.csv")
-    Data = DataSet(X_train, X_test, Y_train, Y_test)
-    Data.normalize() # Data normalization
-    X_train, Y_train = Data.train_set()
-    X_test, Y_test = Data.test_set()
+    # print(X_train.T[3].std())
     
     # Linear = LinearRegression(X_train, Y_train)
-    Ridge = RidgeRegression(X_train, Y_train, 90)
-    Ridge.analysis_fit(X_train, Y_train)
+    # Linear.analysis_fit(X_train, Y_train)
     
-    Kernel = RBFKernelRegression(X_train, Y_train, 5, 50)
-    Kernel.analysis_fit()
+    # Ridge = RidgeRegression(X_train, Y_train, 90)
+    # Ridge.analysis_fit(X_train, Y_train)
+    
+    # Kernel = RBFKernelRegression(X_train, Y_train, 5, 50)
+    # Kernel.analysis_fit()
     
     Lasso = LassoRegression(X_train, Y_train, 60)
-    Lasso.CoordinateDescent(1.5, 0.01, 1000)
+    # Lasso.CoordinateDescent(1.7, 0.01, 10000)
+    
     # for epoch in range(epochs):
     #     loss = Linear.loss()
     #     deri = Linear.derivative()
@@ -201,6 +211,9 @@ if __name__ == "__main__":
     # print(f'Ridge: {sse_loss(Ridge.predict(X_test), Y_test)}')
     # print(f'RBFKerner: {sse_loss(Kernel.predict(X_test), Y_test)}')
 
-    print(f'Lasso: {sse_loss(Lasso.predict(X_test), Y_test)}')
-    print(Lasso.beta)
-    polt_beta(Lasso.beta, 'Lasso')
+    # print(Linear.beta)
+    # polt_beta(Linear.beta, 'Linear')
+
+    # print(f'Lasso: {sse_loss(Lasso.predict(X_test), Y_test)}')
+    # print(Lasso.beta)
+    # polt_beta(Lasso.beta, 'Lasso')

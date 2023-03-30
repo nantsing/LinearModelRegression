@@ -1,9 +1,6 @@
 import pandas as pd
 import numpy as np
 
-import pandas as pd
-import numpy as np
-
 
 def get_data(
     data_path: str,                       # file path of data to read
@@ -11,6 +8,7 @@ def get_data(
     test_sample_num: float = 67,          # number of samples to use for testing
     is_bias: bool = True,                 # whether to add a bias term to the features
     is_shuffle: bool = False,             # whether to shuffle the samples
+    is_normalized: bool = True,
     )-> tuple:
 
     X_list = []                           # create an empty list to store the features
@@ -23,6 +21,15 @@ def get_data(
         Y_list.append(Y_piece)            # append the label to the list
 
     X = np.array(X_list)                  # convert the list of features to a numpy array
+
+    #######################################################################
+    #### 2023.3.29 update: normalize the data, so that each dimension has zero mean and unit variance
+    #######################################################################
+    if is_normalized:  # if the normalize flag is set to True
+        for i in range(0, X.shape[-1]):
+            X[:, i] = (X[:, i] - X[:, i].mean()) / X[:, i].std()
+    #######################################################################
+
     if is_bias:                           # if the bias flag is set to True
         X = np.concatenate([np.ones((len(X_list),1)),X],axis=1).astype(np.float32)  # add a column of ones to the features as the bias term
     else:                                 # if the bias flag is set to False
@@ -36,6 +43,9 @@ def get_data(
         np.random.shuffle(indexes)        # shuffle the indexes randomly
         X = X[indexes]                    # shuffle the features based on the shuffled indexes
         Y = Y[indexes]                    # shuffle the labels based on the shuffled indexes
+
+    # print(X.mean())
+    # print(X.var())
 
     X_train = X[:train_sample_num]        # extract the training features from the beginning of the numpy array
     Y_train = Y[:train_sample_num]        # extract the training labels from the beginning of the numpy array

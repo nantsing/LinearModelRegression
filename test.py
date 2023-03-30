@@ -15,6 +15,12 @@ X_train, X_test, Y_train, Y_test = get_data("./dataset/forestfires.csv")
 
 # print(max(0, -1))
 
-x = np.array([1, 2, 3, 4])
-x.sort()
-print(x)
+# x = np.array([1, 2, 3, 4])
+# x.sort()
+# print(x)
+
+
+a = np.array([3, 5, 1])
+b = np.argsort(-a)
+print("a:", end='')
+print(b)
