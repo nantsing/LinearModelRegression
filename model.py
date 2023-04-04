@@ -4,6 +4,7 @@ import numpy as np
 from dataset import get_data
 # from data_preprocess import DataSet
 from matplotlib import pyplot as plt
+import matplotlib.patches as mpatches
 
 # y_i = beta.T @ X_i
 class LinearRegression:
@@ -29,11 +30,14 @@ class LinearRegression:
         Y = np.array(Y_train)
         self.beta = np.linalg.inv(X.T @ X) @ X.T @ Y
     
-    def update(self, lr = 0.00002):
+    def update(self, lr = 0.0000002):
         self.beta = self.beta - lr * self.deri
     
     def predict(self, X):
         return X @ self.beta
+
+    def load(self, path):
+        self.beta = np.load(path)
     
 
 #l(beta) = (Y - beta.T @ X).T @ (Y - beta.T @ X) + Lambda * beta.T @ beta
@@ -62,11 +66,14 @@ class RidgeRegression:
         Y = np.array(Y_train)
         self.beta = np.linalg.inv(X.T @ X + self.Lambda * np.eye(len(self.beta))) @ X.T @ Y
     
-    def update(self, lr = 0.000002):
+    def update(self, lr = 0.00033):
         self.beta = self.beta - lr * self.deri
     
     def predict(self, X): 
         return X @ self.beta
+    
+    def load(self, path):
+        self.beta = np.load(path)
     
 #l(c) = (Y - Kc).T @ (Y - Kc) + Lambda * c.T @ K @ c
 class RBFKernelRegression:
@@ -104,7 +111,7 @@ class RBFKernelRegression:
     def analysis_fit(self):
         self.c = np.linalg.inv(self.K + self.Lambda * np.eye(len(self.c))) @ self.Y
     
-    def update(self, lr = 0.000002):
+    def update(self, lr = 0.0000001):
         self.c = self.c - lr * self.deri
     
     def predict(self, X_): 
@@ -150,6 +157,9 @@ class LassoRegression:
                 Xj = self.X.T[j]
                 gamma = R @ Xj / (Xj.T @ Xj)
                 self.beta[j] = np.sign(gamma) * max(0, abs(gamma) - Lambda / (Xj.T @ Xj))
+
+    def load(self, path):
+        self.beta = np.load(path)
     
 def sse_loss(Y_predict, Y_test):
     N = len(Y_test)
@@ -164,20 +174,42 @@ def polt_beta(beta, name, is_removed_bias = 1):
     if is_removed_bias:
         attri = attri[1:]
         x = x[1:]
-        
-    attri_idx = np.argsort(-x)
-    x = -np.sort(-x)
-    attri = attri[attri_idx]
+
+    colors = np.where(x > 0, 'r', 'b')
+    x = abs(x)
+    adj_idx = np.argsort(-x)
     
     plt.figure()
-    plt.bar(attri, x)
-    plt.grid(True,linestyle=':',color='r',alpha=0.6)
+    plt.bar(attri[adj_idx], x[adj_idx], color = colors[adj_idx], alpha = 0.6)
+    plt.grid(True, linestyle=':', color='r', alpha=0.6)
+    pos_patch = mpatches.Patch(color='red', label='Positive', alpha = 0.6)
+    neg_patch = mpatches.Patch(color='blue', label='Negative', alpha = 0.6)
+    plt.legend(handles=[pos_patch, neg_patch])
     # plt.xlabel(attri)
     plt.title(f'{name} Beta')
     plt.savefig(f'fig/{name}.png')
 
+def plot_c(c, name):
+    x = c.copy()
+    colors = np.where(x > 0, 'r', 'b')
+    x = abs(x)
+    adj_idx = np.argsort(-x)
+    # print(x[adj_idx])
+    # print(len(c))
+    plt.figure()
+    plt.bar(range(len(c)), x[adj_idx], color = colors[adj_idx], alpha = 0.6)
+    plt.xlim((0, len(c)))
+    plt.ylim((0, x.max()))
+    plt.grid(True, linestyle=':', color='r', alpha=0.6)
+    pos_patch = mpatches.Patch(color='red', label='Positive', alpha = 0.6)
+    neg_patch = mpatches.Patch(color='blue', label='Negative', alpha = 0.6)
+    plt.legend(handles=[pos_patch, neg_patch])
+    # plt.xlabel(attri)
+    plt.title(f'{name} c')
+    plt.savefig(f'fig/{name}.png')
+
 if __name__ == "__main__":
-    epochs = 1500000
+    epochs = 10000
     X_train, X_test, Y_train, Y_test = get_data("./dataset/forestfires.csv")
     # print(X_train.T[3].std())
     
@@ -187,10 +219,10 @@ if __name__ == "__main__":
     # Ridge = RidgeRegression(X_train, Y_train, 90)
     # Ridge.analysis_fit(X_train, Y_train)
     
-    # Kernel = RBFKernelRegression(X_train, Y_train, 5, 50)
-    # Kernel.analysis_fit()
+    Kernel = RBFKernelRegression(X_train, Y_train, 5, 50)
+    Kernel.analysis_fit()
     
-    Lasso = LassoRegression(X_train, Y_train, 60)
+    # Lasso = LassoRegression(X_train, Y_train, 60)
     # Lasso.CoordinateDescent(1.7, 0.01, 10000)
     
     # for epoch in range(epochs):
@@ -206,10 +238,20 @@ if __name__ == "__main__":
     #     Lasso.update()
     #     if(epoch%5000 == 0):
     #         print(f'Epoch {epoch}: loss = {loss}, derivative = {deri}')
+
+    # for epoch in range(epochs):
+    #     loss = Ridge.loss()
+    #     deri = Ridge.derivative()
+    #     Ridge.update()
+    #     if(epoch%5000 == 0):
+    #         print(f'Epoch {epoch}: loss = {loss}, derivative = {deri}')
+
+    # print(Ridge.beta)
+    # polt_beta(Ridge.beta, 'Ridge')
             
     # print(f'Linear: {sse_loss(Linear.predict(X_test), Y_test)}')
     # print(f'Ridge: {sse_loss(Ridge.predict(X_test), Y_test)}')
-    # print(f'RBFKerner: {sse_loss(Kernel.predict(X_test), Y_test)}')
+    print(f'RBFKerner: {sse_loss(Kernel.predict(X_test), Y_test)}')
 
     # print(Linear.beta)
     # polt_beta(Linear.beta, 'Linear')
