@@ -185,17 +185,33 @@ def polt_beta(beta, name, is_removed_bias = 1):
     pos_patch = mpatches.Patch(color='red', label='Positive', alpha = 0.6)
     neg_patch = mpatches.Patch(color='blue', label='Negative', alpha = 0.6)
     plt.legend(handles=[pos_patch, neg_patch])
-    # plt.xlabel(attri)
     plt.title(f'{name} Beta')
     plt.savefig(f'fig/{name}.png')
+
+#### to test ####
+def plot_multiBeta(Beta, Labelist, figname, is_removed_bias = 1):
+    Y = Beta.copy()
+    attri = np.array(['bias','X','Y','1th','day','FFMC','DMC','DC','ISI','temp','RH','wind','rain'])
+    if is_removed_bias:
+        attri = attri[1:]
+        Y = Y.T[1:].T
+    
+    colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'w']
+    plt.figure()
+    
+    for idx, (beta, label) in enumerate(zip(Beta, Labelist)):
+        plt.plot(attri, beta, colors[idx], marker = 'o', alpha = 0.6, label = Labelist[idx])
+        
+    plt.legend()
+    plt.title(f'{figname} MultiBeta')
+    plt.savefig(f'fig/{figname}.png')
+    
 
 def plot_c(c, name):
     x = c.copy()
     colors = np.where(x > 0, 'r', 'b')
     x = abs(x)
     adj_idx = np.argsort(-x)
-    # print(x[adj_idx])
-    # print(len(c))
     plt.figure()
     plt.bar(range(len(c)), x[adj_idx], color = colors[adj_idx], alpha = 0.6)
     plt.xlim((0, len(c)))
@@ -204,58 +220,24 @@ def plot_c(c, name):
     pos_patch = mpatches.Patch(color='red', label='Positive', alpha = 0.6)
     neg_patch = mpatches.Patch(color='blue', label='Negative', alpha = 0.6)
     plt.legend(handles=[pos_patch, neg_patch])
-    # plt.xlabel(attri)
     plt.title(f'{name} c')
     plt.savefig(f'fig/{name}.png')
 
 if __name__ == "__main__":
-    epochs = 10000
     X_train, X_test, Y_train, Y_test = get_data("./dataset/forestfires.csv")
-    # print(X_train.T[3].std())
     
-    # Linear = LinearRegression(X_train, Y_train)
-    # Linear.analysis_fit(X_train, Y_train)
+    Linear = LinearRegression(X_train, Y_train)
+    Linear.analysis_fit(X_train, Y_train)
+    print(Linear.beta)
     
-    # Ridge = RidgeRegression(X_train, Y_train, 90)
-    # Ridge.analysis_fit(X_train, Y_train)
+    Ridge = RidgeRegression(X_train, Y_train, 90)
+    Ridge.analysis_fit(X_train, Y_train)
+    print(Ridge.beta)
     
     Kernel = RBFKernelRegression(X_train, Y_train, 5, 50)
     Kernel.analysis_fit()
-    
-    # Lasso = LassoRegression(X_train, Y_train, 60)
-    # Lasso.CoordinateDescent(1.7, 0.01, 10000)
-    
-    # for epoch in range(epochs):
-    #     loss = Linear.loss()
-    #     deri = Linear.derivative()
-    #     Linear.update()
-    #     if(epoch%5000 == 0):
-    #         print(f'Epoch {epoch}: loss = {loss}, derivative = {deri}')
-    
-    # for epoch in range(epochs):
-    #     loss = Lasso.loss()
-    #     deri = Lasso.derivative()
-    #     Lasso.update()
-    #     if(epoch%5000 == 0):
-    #         print(f'Epoch {epoch}: loss = {loss}, derivative = {deri}')
-
-    # for epoch in range(epochs):
-    #     loss = Ridge.loss()
-    #     deri = Ridge.derivative()
-    #     Ridge.update()
-    #     if(epoch%5000 == 0):
-    #         print(f'Epoch {epoch}: loss = {loss}, derivative = {deri}')
-
-    # print(Ridge.beta)
-    # polt_beta(Ridge.beta, 'Ridge')
-            
-    # print(f'Linear: {sse_loss(Linear.predict(X_test), Y_test)}')
-    # print(f'Ridge: {sse_loss(Ridge.predict(X_test), Y_test)}')
     print(f'RBFKerner: {sse_loss(Kernel.predict(X_test), Y_test)}')
 
-    # print(Linear.beta)
-    # polt_beta(Linear.beta, 'Linear')
-
-    # print(f'Lasso: {sse_loss(Lasso.predict(X_test), Y_test)}')
-    # print(Lasso.beta)
-    # polt_beta(Lasso.beta, 'Lasso')
+    Lasso = LassoRegression(X_train, Y_train, 60)
+    Lasso.CoordinateDescent()
+    print(Lasso.beta)

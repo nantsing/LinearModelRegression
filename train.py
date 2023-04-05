@@ -48,6 +48,8 @@ print()
 
 ######################## Ridge regression ##############################
 print("-------------- Ridge Regression --------------")
+Beta = [Linear.beta, ]
+Labelsit = ['lambda = 0', ]
 lr =  0.000033
 Lambdas = [1, 10, 100, 1000]
 # RidgeEpochs = int(1e5)
@@ -75,6 +77,8 @@ for Lambda in Lambdas:
         RidgeEpochs, lr, Lambda = np.load(RidgeParaPath)
         Ridge.load(RidgePath)
 
+    ################# To Do ######################
+    
     polt_beta(Ridge.beta, figName)
     print(f"Bar chart of Beta has been saved at ./fig/{figName}.png")
     SSE = sse_loss(Ridge.predict(X_test), Y_test)
@@ -157,6 +161,7 @@ else:
     print(f"LassoRegression SSE = {SSE}, Parameters: a = {a}, b = {b}, intervel = {interval}, Method: CD.")
 
 print()
+
 
 
 ########################################################################
