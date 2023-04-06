@@ -13,7 +13,7 @@ Ridge_train = False
 RawRidgePath = './models/Ridge'
 RawRidgeParaPath = './models/RidgePara'
 
-Lasso_train = False
+Lasso_train = True
 use_coordinate_descent = True
 RawLassoPath = './models/Lasso'
 RawLassoParaPath = './models/LassoPara'
@@ -49,7 +49,7 @@ print()
 ######################## Ridge regression ##############################
 print("-------------- Ridge Regression --------------")
 Beta = [Linear.beta, ]
-Labelsit = ['lambda = 0', ]
+Labelist = ['lambda = 0', ]
 lr =  0.000033
 Lambdas = [1, 10, 100, 1000]
 # RidgeEpochs = int(1e5)
@@ -77,16 +77,23 @@ for Lambda in Lambdas:
         RidgeEpochs, lr, Lambda = np.load(RidgeParaPath)
         Ridge.load(RidgePath)
 
-    ################# To Do ######################
-    
+    Beta.append(Ridge.beta)
+    Labelist.append(f'lambda = {Lambda}')
+
     polt_beta(Ridge.beta, figName)
     print(f"Bar chart of Beta has been saved at ./fig/{figName}.png")
     SSE = sse_loss(Ridge.predict(X_test), Y_test)
     print(f"RidgeRegression SSE = {SSE}, Parameters: Epochs = {RidgeEpochs}, lr = {lr}, Lambda = {Lambda}.")
+
+figName = 'Ridge'
+plot_multiBeta(Beta, Labelist, figName)
+print(f"Line chart of different Betas have been saved at ./fig/{figName}.png")
 print()
 
 ######################## RBF Kernel regression #########################
 print("-------------- RBF Kernel Regression --------------")
+C = []
+Labelist = []
 sigma = 50 # [1, 50, 500, 5000]
 Lambdas = [1, 10, 100, 1000]
 RawfigName = 'Kernel'
@@ -97,20 +104,28 @@ for Lambda in Lambdas:
     # KernelPath = RawKernelPath + f'_lambda{Lambda}.npy'
     # KernelParaPath = RawKernelParaPath + f'_lambda{Lambda}.npy'
     Kernel.analysis_fit()
+    C.append(Kernel.c)
+    Labelist.append(f'lambda={Lambda}_Sigma={sigma}')
 
     plot_c(Kernel.c, figName)
     print(f"Bar chart of c has been saved at ./fig/{figName}.png")
     SSE = sse_loss(Kernel.predict(X_test), Y_test)
     print(f"KernelRegression SSE = {SSE}, Parameters: Lambda = {Lambda}, Sigma = {sigma}.")
+
+figName = 'Kernel'
+plot_multiC(C, Labelist, figName)
+print(f"Line chart of different Cs have been saved at ./fig/{figName}.png")
 print()
 
 ######################## Lasso regression ##############################
 print("-------------- Lasso Regression --------------")
+Beta = [Linear.beta, ]
+Labelist = ['lambda = 0', ]
 lr =  0.0001
 Lambdas = [1, 10, 100, 1000]
 a = 1.7
 b = 0.01
-interval = 10000
+interval = int(10000)
 LassoEpochs = int(1e6)
 RawfigName = 'Lasso'
 
@@ -143,9 +158,9 @@ if not use_coordinate_descent:
 
 else:
     Lasso = LassoRegression(X_train, Y_train, Lambda)
-    figName = RawfigName + f'_a{a}_b{b}_intervel{interval}.png'
-    LassoPath = RawLassoPath + f'a{a}_b{b}_intervel{interval}.npy'
-    LassoParaPath = RawLassoParaPath + f'a{a}_b{b}_intervel{interval}.npy'
+    figName = RawfigName + f'_a{a}_b{b}_interval{interval}.png'
+    LassoPath = RawLassoPath + f'_a{a}_b{b}_interval{interval}.npy'
+    LassoParaPath = RawLassoParaPath + f'_a{a}_b{b}_interval{interval}.npy'
     if Lasso_train:
         Lasso.CoordinateDescent(a, b, interval)
         np.save(LassoPath, Lasso.beta)
@@ -160,8 +175,24 @@ else:
     SSE = sse_loss(Lasso.predict(X_test), Y_test)
     print(f"LassoRegression SSE = {SSE}, Parameters: a = {a}, b = {b}, intervel = {interval}, Method: CD.")
 
+for Lambda in Lambdas:
+    path = RawLassoPath + f'_lambda{Lambda}.npy'
+    beta = np.load(path)
+    Beta.append(beta)
+    Labelist.append(f'lambda = {Lambda}')
+
+path = RawLassoPath + f'_a{a}_b{b}_interval{interval}.npy'
+beta = np.load(path)
+Beta.append(beta)
+Labelist.append('Coordinate_Decent')
+
+figName = 'Lasso'
+plot_multiBeta(Beta, Labelist, figName)
+print(f"Line chart of different Betas have been saved at ./fig/{figName}.png")
 print()
 
+print('--------------------------------------------')
+print("All Done.")
 
 
 ########################################################################

@@ -190,16 +190,16 @@ def polt_beta(beta, name, is_removed_bias = 1):
 
 #### to test ####
 def plot_multiBeta(Beta, Labelist, figname, is_removed_bias = 1):
-    Y = Beta.copy()
+    x = np.array(Beta.copy())
     attri = np.array(['bias','X','Y','1th','day','FFMC','DMC','DC','ISI','temp','RH','wind','rain'])
     if is_removed_bias:
         attri = attri[1:]
-        Y = Y.T[1:].T
+        x = x.T[1:].T
     
     colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'w']
     plt.figure()
     
-    for idx, (beta, label) in enumerate(zip(Beta, Labelist)):
+    for idx, (beta, label) in enumerate(zip(x, Labelist)):
         plt.plot(attri, beta, colors[idx], marker = 'o', alpha = 0.6, label = Labelist[idx])
         
     plt.legend()
@@ -222,6 +222,19 @@ def plot_c(c, name):
     plt.legend(handles=[pos_patch, neg_patch])
     plt.title(f'{name} c')
     plt.savefig(f'fig/{name}.png')
+
+def plot_multiC(C, Labelist, figname):
+    x = np.array(C.copy())
+    colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'w']
+    plt.figure()
+    for idx, (c, label) in enumerate(zip(x, Labelist)):
+        plt.plot(range(len(c)), c, colors[idx], marker = 'o', alpha = 0.6, label = Labelist[idx])
+        
+    plt.xlim((0, len(x[0])))
+    plt.ylim((0, x.max()))
+    plt.legend()
+    plt.title(f'{figname} MultiC')
+    plt.savefig(f'fig/{figname}.png')
 
 if __name__ == "__main__":
     X_train, X_test, Y_train, Y_test = get_data("./dataset/forestfires.csv")

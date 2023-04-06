@@ -1,4 +1,4 @@
-# For calculate correlation coefficient and determination coefficient
+# For calculating correlation coefficient and determination coefficient
 import math
 import numpy as np
 from model import *
